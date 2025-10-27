@@ -1,15 +1,23 @@
+// File: /api/book.js
 const mongoose = require('mongoose');
 
 let conn = null;
 const connectDB = async () => {
+    // === DEBUGGING: In ra biến môi trường ===
+    console.log("MONGODB_URI received by function:", process.env.MONGODB_URI ? "******" : "UNDEFINED or EMPTY"); 
+    // Chúng ta không in ra toàn bộ chuỗi để bảo mật, chỉ kiểm tra xem nó có tồn tại không.
+    // === KẾT THÚC DEBUGGING ===
+
     if (conn) {
         return conn;
     }
     try {
-        conn = await mongoose.connect(process.env.MONGODB_URI, {
+        conn = await mongoose.connect(process.env.MONGODB_URI, { // Code vẫn dùng biến này
             useNewUrlParser: true,
             useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000 // Thêm timeout để không chờ quá lâu
         });
+        console.log("MongoDB connected successfully"); // Log khi thành công
         return conn;
     } catch (error) {
         console.error("Lỗi kết nối MongoDB:", error);
@@ -41,7 +49,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        await connectDB();
+        await connectDB(); // Cố gắng kết nối
         const newBooking = req.body;
         
         if (
@@ -71,7 +79,13 @@ export default async function handler(req, res) {
         res.status(201).json({ success: true, bookingCode: bookingCode });
 
     } catch (error) {
-        console.error('Lỗi khi lưu booking:', error);
-        res.status(500).json({ success: false, message: 'Lỗi máy chủ: ' + error.message });
+        console.error('Lỗi trong API handler:', error);
+        // Trả về lỗi kết nối DB nếu connectDB() thất bại
+        if (error.message === "Không thể kết nối DB") {
+             res.status(500).json({ success: false, message: 'Lỗi máy chủ: Không thể kết nối DB' });
+        } else {
+             res.status(500).json({ success: false, message: 'Lỗi máy chủ khi xử lý: ' + error.message });
+        }
+       
     }
 }
