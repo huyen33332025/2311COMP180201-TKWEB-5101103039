@@ -1,33 +1,4 @@
-const mongoose = require('mongoose');
-
-let connLookup = null;
-const connectDBLookup = async () => {
-    if (connLookup) return connLookup;
-    try {
-        connLookup = await mongoose.connect(process.env.MONGODB_URI, {
-             serverSelectionTimeoutMS: 5000
-        });
-        console.log("MongoDB connected successfully for lookup");
-        return connLookup;
-    } catch (error) {
-         console.error("Lỗi kết nối MongoDB (lookup):", error);
-        throw new Error("Không thể kết nối DB");
-    }
-};
-
-const BookingLookupSchema = new mongoose.Schema({
-    code: { type: String },
-    name: { type: String },
-    phone: { type: String },
-    date: { type: String },
-    qty: { type: Number },
-    paymentMethod: { type: String },
-    totalPrice: { type: Number },
-    depositAmount: { type: Number },
-    bookedAt: { type: Date }
-});
-
-const BookingLookup = mongoose.models.Booking || mongoose.model('Booking', BookingLookupSchema);
+const { connectDB, BookingModel } = require('./db'); 
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -37,13 +8,13 @@ export default async function handler(req, res) {
     const { code } = req.query; 
 
     try {
-        await connectDBLookup();
+        await connectDB();
         
         if (!code) {
             return res.status(400).json({ success: false, message: 'Vui lòng cung cấp mã booking.' });
         }
         
-        const booking = await BookingLookup.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') } });
+        const booking = await BookingModel.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') } });
 
         if (booking) {
             res.status(200).json({ success: true, booking: booking });
