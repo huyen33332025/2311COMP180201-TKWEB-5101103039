@@ -42,7 +42,7 @@ function BookingModal({ onBookingSuccess }) {
     setIsLoading(true);
 
     try {
-        const response = await fetch('http://localhost:3001/api/book', {
+        const response = await fetch('/api/book', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ function BookingModal({ onBookingSuccess }) {
             }, 500); 
 
             setDate('');
-            setQty(1);
+            setQty(10);
             setName('');
             setPhone('');
             setPaymentMethod('cash');
@@ -128,7 +128,7 @@ function BookingModal({ onBookingSuccess }) {
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
             />
-            <label className="form-label">Số điện thoại</label>
+            <label className="form-label">Số điện thoại (10 số, bắt đầu bằng 0)</label>
             <input 
               type="tel" 
               className="form-control mb-3" 
