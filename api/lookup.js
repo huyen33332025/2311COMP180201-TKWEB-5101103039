@@ -1,20 +1,21 @@
 const mongoose = require('mongoose');
 
-let conn = null;
-const connectDB = async () => {
-    if (conn) return conn;
+let connLookup = null;
+const connectDBLookup = async () => {
+    if (connLookup) return connLookup;
     try {
-        conn = await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
+        connLookup = await mongoose.connect(process.env.MONGODB_URI, {
+             serverSelectionTimeoutMS: 5000
         });
-        return conn;
+        console.log("MongoDB connected successfully for lookup");
+        return connLookup;
     } catch (error) {
+         console.error("Lỗi kết nối MongoDB (lookup):", error);
         throw new Error("Không thể kết nối DB");
     }
 };
 
-const BookingSchema = new mongoose.Schema({
+const BookingLookupSchema = new mongoose.Schema({
     code: { type: String },
     name: { type: String },
     phone: { type: String },
@@ -25,7 +26,8 @@ const BookingSchema = new mongoose.Schema({
     depositAmount: { type: Number },
     bookedAt: { type: Date }
 });
-const Booking = mongoose.models.Booking || mongoose.model('Booking', BookingSchema);
+
+const BookingLookup = mongoose.models.Booking || mongoose.model('Booking', BookingLookupSchema);
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -35,13 +37,13 @@ export default async function handler(req, res) {
     const { code } = req.query; 
 
     try {
-        await connectDB();
+        await connectDBLookup();
         
         if (!code) {
             return res.status(400).json({ success: false, message: 'Vui lòng cung cấp mã booking.' });
         }
-
-        const booking = await Booking.findOne({ code: code.toLowerCase() });
+        
+        const booking = await BookingLookup.findOne({ code: { $regex: new RegExp(`^${code}$`, 'i') } });
 
         if (booking) {
             res.status(200).json({ success: true, booking: booking });
@@ -49,6 +51,7 @@ export default async function handler(req, res) {
             res.status(404).json({ success: false, message: 'Không tìm thấy mã booking này.' });
         }
     } catch (error) {
+        console.error('Lỗi trong API handler /api/lookup:', error);
         res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
     }
 }

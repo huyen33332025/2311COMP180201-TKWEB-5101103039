@@ -1,23 +1,17 @@
-// File: /api/book.js
 const mongoose = require('mongoose');
 
 let conn = null;
 const connectDB = async () => {
-    // === DEBUGGING: In ra biến môi trường ===
-    console.log("MONGODB_URI received by function:", process.env.MONGODB_URI ? "******" : "UNDEFINED or EMPTY"); 
-    // Chúng ta không in ra toàn bộ chuỗi để bảo mật, chỉ kiểm tra xem nó có tồn tại không.
-    // === KẾT THÚC DEBUGGING ===
+    console.log("MONGODB_URI received by function:", process.env.MONGODB_URI ? "******" : "UNDEFINED or EMPTY");
 
     if (conn) {
         return conn;
     }
     try {
-        conn = await mongoose.connect(process.env.MONGODB_URI, { // Code vẫn dùng biến này
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000 // Thêm timeout để không chờ quá lâu
+        conn = await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000 
         });
-        console.log("MongoDB connected successfully"); // Log khi thành công
+        console.log("MongoDB connected successfully for booking");
         return conn;
     } catch (error) {
         console.error("Lỗi kết nối MongoDB:", error);
@@ -30,7 +24,7 @@ const BookingSchema = new mongoose.Schema({
     name: { type: String, required: true },
     phone: { type: String, required: true },
     date: { type: String, required: true },
-    qty: { type: Number, required: true },
+    qty: { type: Number, required: true, min: 1 },
     paymentMethod: { type: String, required: true },
     totalPrice: { type: Number, required: true },
     depositAmount: { type: Number, required: true },
@@ -49,15 +43,19 @@ export default async function handler(req, res) {
     }
 
     try {
-        await connectDB(); // Cố gắng kết nối
+        await connectDB();
         const newBooking = req.body;
         
         if (
             !newBooking.name || 
             !newBooking.phone || 
             !newBooking.date || 
-            !newBooking.paymentMethod
+            !newBooking.paymentMethod ||
+            (newBooking.qty !== undefined && newBooking.qty < 1)
         ) {
+             if (newBooking.qty < 1) {
+                 return res.status(400).json({ success: false, message: 'Số lượng khách tối thiểu là 1.' });
+            }
             return res.status(400).json({ success: false, message: 'Thiếu thông tin.' });
         }
 
@@ -79,13 +77,13 @@ export default async function handler(req, res) {
         res.status(201).json({ success: true, bookingCode: bookingCode });
 
     } catch (error) {
-        console.error('Lỗi trong API handler:', error);
-        // Trả về lỗi kết nối DB nếu connectDB() thất bại
+        console.error('Lỗi trong API handler /api/book:', error);
         if (error.message === "Không thể kết nối DB") {
              res.status(500).json({ success: false, message: 'Lỗi máy chủ: Không thể kết nối DB' });
+        } else if (error.code === 11000) {
+             res.status(500).json({ success: false, message: 'Lỗi máy chủ: Mã booking bị trùng, vui lòng thử lại.' });
         } else {
              res.status(500).json({ success: false, message: 'Lỗi máy chủ khi xử lý: ' + error.message });
         }
-       
     }
 }

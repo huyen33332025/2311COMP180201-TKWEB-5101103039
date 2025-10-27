@@ -18,7 +18,8 @@ function BookingModal({ onBookingSuccess }) {
   const minDate = `${year}-${month}-${day}`;
 
   const tourPriceVND = 5290000;
-  const totalPrice = tourPriceVND * qty;
+  const currentQty = parseInt(qty, 10) || 1; 
+  const totalPrice = tourPriceVND * currentQty;
   const realDeposit = totalPrice * 0.3;
   const testDeposit = 0; 
 
@@ -38,7 +39,12 @@ function BookingModal({ onBookingSuccess }) {
       alert('Vui lòng nhập số điện thoại hợp lệ (10 số, bắt đầu bằng 0).');
       return;
     }
-
+    
+    if (currentQty < 1) {
+      alert('Số lượng khách tối thiểu là 1 người.');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -51,7 +57,7 @@ function BookingModal({ onBookingSuccess }) {
                 name: name,
                 phone: phone,
                 date: date,
-                qty: qty,
+                qty: currentQty,
                 paymentMethod: paymentMethod,
                 totalPrice: totalPrice,
                 depositAmount: testDeposit 
@@ -76,7 +82,7 @@ function BookingModal({ onBookingSuccess }) {
             }, 500); 
 
             setDate('');
-            setQty(10);
+            setQty(1);
             setName('');
             setPhone('');
             setPaymentMethod('cash');
@@ -110,7 +116,7 @@ function BookingModal({ onBookingSuccess }) {
               min={minDate}
               disabled={isLoading}
             />
-            <label className="form-label">Số lượng khách</label>
+            <label className="form-label">Số lượng khách (Tối thiểu 1)</label>
             <input 
               type="number" 
               className="form-control mb-3" 
@@ -141,7 +147,7 @@ function BookingModal({ onBookingSuccess }) {
             <div className="text-center mb-3">
                 <div style={{fontSize: '1.1rem'}}>Tổng cộng: <strong>{formatter.format(totalPrice)}</strong></div>
                 <div style={{fontSize: '0.9rem', color: 'var(--text-light)'}}>
-                    (Đã bao gồm {qty} khách)
+                    (Đã bao gồm {currentQty} khách)
                 </div>
             </div>
 
