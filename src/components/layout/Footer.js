@@ -49,7 +49,7 @@ function Footer() {
     let resultModal;
     try {
       resultModal = Modal.getOrCreateInstance(document.getElementById('modalLookupResult'));
-      const response = await fetch(`http://localhost:3001/api/lookup/${bookingCode}`);
+      const response = await fetch(`/api/lookup?code=${bookingCode}`);
       
       if (response.ok) {
         const result = await response.json();
