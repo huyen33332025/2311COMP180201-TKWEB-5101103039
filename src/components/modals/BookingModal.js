@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 import { Modal } from 'bootstrap';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey); 
+
+const generateBookingCode = () => {
+    return 'BK' + Math.floor(Math.random() * 10000 + 1000);
+};
 
 function BookingModal({ onBookingSuccess }) {
   const [date, setDate] = useState('');
@@ -47,52 +56,54 @@ function BookingModal({ onBookingSuccess }) {
     
     setIsLoading(true);
 
+    const bookingCode = generateBookingCode();
+
     try {
-        const response = await fetch('/api/book', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: name,
-                phone: phone,
-                date: date,
-                qty: currentQty,
-                paymentMethod: paymentMethod,
-                totalPrice: totalPrice,
-                depositAmount: testDeposit 
-            }),
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            onBookingSuccess(result.bookingCode);
-            
-            const currentModal = Modal.getInstance(document.getElementById('modalBooking'));
-            if (currentModal) {
-                currentModal.hide();
-            }
-
-            setTimeout(() => {
-                const successModal = Modal.getOrCreateInstance(document.getElementById('modalSuccess'));
-                if (successModal) {
-                    successModal.show();
+        const { data, error } = await supabase
+            .from('bookings') 
+            .insert([
+                {
+                    code: bookingCode,
+                    name: name,
+                    phone: phone,
+                    date: date,
+                    qty: currentQty,
+                    payment_method: paymentMethod, 
+                    total_price: totalPrice,
+                    deposit_amount: testDeposit
                 }
-            }, 500); 
+            ])
+            .select(); 
 
-            setDate('');
-            setQty(1);
-            setName('');
-            setPhone('');
-            setPaymentMethod('cash');
-        } else {
-            alert('Đặt tour thất bại: ' + (result.message || 'Lỗi không xác định.'));
+        if (error) {
+            console.error('Supabase Error:', error);
+            alert('Đặt tour thất bại: Lỗi cơ sở dữ liệu: ' + error.message);
+            return;
         }
 
+        onBookingSuccess(bookingCode);
+        
+        const currentModal = Modal.getInstance(document.getElementById('modalBooking'));
+        if (currentModal) {
+            currentModal.hide();
+        }
+
+        setTimeout(() => {
+            const successModal = Modal.getOrCreateInstance(document.getElementById('modalSuccess'));
+            if (successModal) {
+                successModal.show();
+            }
+        }, 500); 
+
+        setDate('');
+        setQty(1);
+        setName('');
+        setPhone('');
+        setPaymentMethod('cash');
+
     } catch (error) {
-        console.error('Network error:', error);
-        alert('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+        console.error('Network error or unexpected:', error);
+        alert('Lỗi hệ thống không xác định. Vui lòng thử lại sau.');
     } finally {
         setIsLoading(false);
     }

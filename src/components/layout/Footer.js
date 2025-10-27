@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { projectInfo } from '../../data/tourData';
 import LookupResultModal from '../modals/LookupResultModal';
 import { Modal } from 'bootstrap';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey); 
 
 const ProjectInfo = () => (
     <div style={{ 
@@ -49,21 +54,28 @@ function Footer() {
     let resultModal;
     try {
       resultModal = Modal.getOrCreateInstance(document.getElementById('modalLookupResult'));
-      const response = await fetch(`/api/lookup?code=${bookingCode}`);
       
-      if (response.ok) {
-        const result = await response.json();
-        setLookupResult(result.booking);
-        setLookupError(null);
-      } else {
-        const errorResult = await response.json();
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('code', bookingCode.toUpperCase()) 
+        .single();
+      
+      if (error && error.code === 'PGRST116') { 
         setLookupResult(null);
-        setLookupError(errorResult.message || 'Không tìm thấy booking.');
+        setLookupError('Không tìm thấy mã booking này.');
+      } else if (error) {
+         console.error('Supabase Lookup Error:', error);
+         setLookupResult(null);
+         setLookupError('Lỗi tra cứu cơ sở dữ liệu.');
+      } else if (data) {
+        setLookupResult(data);
+        setLookupError(null);
       }
     } catch (error) {
       console.error('Lỗi tra cứu:', error);
       setLookupResult(null);
-      setLookupError('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+      setLookupError('Không thể kết nối đến Supabase. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
       if (resultModal) {
