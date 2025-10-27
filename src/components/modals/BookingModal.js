@@ -49,11 +49,6 @@ function BookingModal({ onBookingSuccess }) {
       return;
     }
     
-    if (currentQty < 1) {
-      alert('Số lượng khách tối thiểu là 1 người.');
-      return;
-    }
-    
     setIsLoading(true);
 
     const bookingCode = generateBookingCode();
