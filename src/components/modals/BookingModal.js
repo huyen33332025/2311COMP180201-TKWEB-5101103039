@@ -3,7 +3,7 @@ import { Modal } from 'bootstrap';
 
 function BookingModal({ onBookingSuccess }) {
   const [date, setDate] = useState('');
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(1);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
