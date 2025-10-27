@@ -1,15 +1,16 @@
+// File: /api/book.js
 const mongoose = require('mongoose');
 
 let conn = null;
 const connectDB = async () => {
-    console.log("MONGODB_URI received by function:", process.env.MONGODB_URI ? "******" : "UNDEFINED or EMPTY");
+    console.log("Attempting DB connection. MONGODB_URI exists:", !!process.env.MONGODB_URI);
 
     if (conn) {
         return conn;
     }
     try {
         conn = await mongoose.connect(process.env.MONGODB_URI, {
-            serverSelectionTimeoutMS: 5000 
+            serverSelectionTimeoutMS: 5000
         });
         console.log("MongoDB connected successfully for booking");
         return conn;
@@ -38,11 +39,17 @@ const generateBookingCode = () => {
 };
 
 export default async function handler(req, res) {
+    // === THÊM LOG Ở ĐÂY ===
+    console.log(`[${new Date().toISOString()}] Received request for /api/book, Method: ${req.method}`);
+    // === KẾT THÚC THÊM LOG ===
+
     if (req.method !== 'POST') {
+        console.log("Method Not Allowed:", req.method);
         return res.status(405).json({ message: 'Chỉ hỗ trợ POST' });
     }
 
     try {
+        console.log("Request body:", req.body); // In ra dữ liệu nhận được
         await connectDB();
         const newBooking = req.body;
         
@@ -53,6 +60,7 @@ export default async function handler(req, res) {
             !newBooking.paymentMethod ||
             (newBooking.qty !== undefined && newBooking.qty < 1)
         ) {
+             console.log("Validation failed. Missing info or qty < 1. Qty:", newBooking.qty);
              if (newBooking.qty < 1) {
                  return res.status(400).json({ success: false, message: 'Số lượng khách tối thiểu là 1.' });
             }
@@ -60,6 +68,7 @@ export default async function handler(req, res) {
         }
 
         const bookingCode = generateBookingCode();
+        console.log("Generated booking code:", bookingCode);
         
         const record = new Booking({
             code: bookingCode,
@@ -72,7 +81,9 @@ export default async function handler(req, res) {
             depositAmount: newBooking.depositAmount
         });
 
+        console.log("Attempting to save record...");
         await record.save();
+        console.log("Record saved successfully.");
 
         res.status(201).json({ success: true, bookingCode: bookingCode });
 
