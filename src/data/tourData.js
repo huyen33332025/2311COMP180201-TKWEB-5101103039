@@ -43,6 +43,19 @@ export const carouselImages = [
   }
 ];
 
+export const aboutData = {
+  title: "Giới thiệu về Hành Trình Về Đất Mũi",
+  content: (
+    <>
+      <p>
+        Bắt đầu hành trình đến <strong>vùng đất biên thùy An Giang, </strong>  du khách <strong>trải nghiệm loại hình du lịch 3 trong 1 </strong>- du lịch hoài niệm, du lịch tâm linh và du lịch sinh thái:</p>
+      <p>
+        <strong>- KDL sinh thái Cồn Én</strong> - tận hưởng vẻ đẹp yên bình giữa mênh mang sóng nước châu thổ tại, ghi lại vạn bức ảnh đẹp với <strong>thế giới gỗ trầm thuỷ có niên đại trăm năm;</strong>
+      </p>
+    </>
+  )
+};
+
 export const overviewInfo = [
   {
     icon: "bi bi-geo-alt",

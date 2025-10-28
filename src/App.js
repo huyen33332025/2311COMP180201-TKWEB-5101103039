@@ -11,6 +11,7 @@ import PriceBar from './components/layout/PriceBar';
 import BackToTopButton from './components/common/BackToTopButton';
 
 import ImageCarousel from './components/sections/ImageCarousel';
+import AboutSection from './components/sections/AboutSection';
 import OverviewSection from './components/sections/OverviewSection';
 import ItinerarySection from './components/sections/ItinerarySection';
 import NotesSection from './components/sections/NotesSection';
@@ -33,6 +34,41 @@ const ProjectInfo = () => (
   </div>
 );
 
+const HomePage = ({ 
+    bookingCode, setBookingCode, lightboxData, setLightboxData,
+    progressWidth, isScrolled, showBackToTop, handleOpenLightbox, handleCloseLightbox, handleBookingSuccess
+}) => {
+    return (
+        <>
+            <div id="readingProgress" style={{ width: progressWidth }} aria-hidden="true"></div>
+            <Header />
+            <ImageCarousel onImageClick={handleOpenLightbox} />
+            <Navigation isScrolled={isScrolled} />
+
+            <main>
+              <AboutSection />
+              <OverviewSection />
+              <ItinerarySection />
+              <NotesSection />
+              <ReviewsSection />
+            </main>
+
+            <Footer />
+            <PriceBar />
+            <BackToTopButton isVisible={showBackToTop} />
+
+            <BookingModal onBookingSuccess={handleBookingSuccess} />
+            <ContactModal />
+            <SuccessModal bookingCode={bookingCode} />
+            <Lightbox 
+                src={lightboxData.src} 
+                caption={lightboxData.caption} 
+                onClose={handleCloseLightbox} 
+            />
+        </>
+    );
+};
+
 function App() {
   const [bookingCode, setBookingCode] = useState('');
   const [lightboxData, setLightboxData] = useState({ src: '', caption: '' });
@@ -44,7 +80,7 @@ function App() {
   const handleScroll = () => {
     const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
     const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const scrolledPercent = (winScroll / height) * 100;
+    const scrolledPercent = height > 0 ? (winScroll / height) * 100 : 0;
     setProgressWidth(scrolledPercent + '%');
 
     setIsScrolled(winScroll > 50);
@@ -75,38 +111,16 @@ function App() {
   const handleBookingSuccess = (code) => {
     setBookingCode(code);
   };
+  
+  const homeProps = { 
+    bookingCode, setBookingCode, lightboxData, setLightboxData,
+    progressWidth, isScrolled, showBackToTop, handleOpenLightbox, handleCloseLightbox, handleBookingSuccess
+  };
 
   return (
     <>
       <ProjectInfo />
-      <div id="readingProgress" style={{ width: progressWidth }} aria-hidden="true"></div>
-      
-      <Header />
-      <ImageCarousel onImageClick={handleOpenLightbox} />
-      
-      <Navigation isScrolled={isScrolled} />
-
-      <main>
-        <OverviewSection />
-        <ItinerarySection />
-        <NotesSection />
-        <ReviewsSection />
-      </main>
-
-      <Footer />
-      
-      <PriceBar />
-      
-      <BackToTopButton isVisible={showBackToTop} />
-
-      <BookingModal onBookingSuccess={handleBookingSuccess} />
-      <ContactModal />
-      <SuccessModal bookingCode={bookingCode} />
-      <Lightbox 
-        src={lightboxData.src} 
-        caption={lightboxData.caption} 
-        onClose={handleCloseLightbox} 
-      />
+      <HomePage {...homeProps} />
     </>
   );
 }

@@ -6,8 +6,9 @@ function Navigation({ isScrolled }) {
 
   return (
     <nav className={navClass} data-aos="fade-down" aria-label="Navigation">
-      <div className="container-inner d-flex justify-content-center">
+      <div className="container-inner d-flex justify-content-between align-items-center">
         <ul className="nav nav-pills">
+          <li className="nav-item"><a className="nav-link scroll-link" href="#gioithieu">Giới thiệu</a></li> 
           <li className="nav-item"><a className="nav-link scroll-link active" href="#tongquan">Tổng quan</a></li>
           <li className="nav-item"><a className="nav-link scroll-link" href="#lichtrinh">Lịch trình</a></li>
           <li className="nav-item"><a className="nav-link scroll-link" href="#luuy">Lưu ý</a></li>
